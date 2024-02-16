@@ -1,115 +1,281 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: SplashScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class SplashScreen extends StatelessWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Splash Screen'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => GridScreen()),
+            );
+          },
+          child: Text('Enter Grid Size'),
+        ),
+      ),
+    );
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class GridScreen extends StatefulWidget {
+  @override
+  _GridScreenState createState() => _GridScreenState();
+}
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class _GridScreenState extends State<GridScreen> {
+  int m = 0;
+  int n = 0;
+  List<List<String>> grid = [];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('Grid Screen'),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: SingleChildScrollView(
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      onChanged: (value) => m = int.tryParse(value) ?? 0,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: 'Enter m'),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (value) => n = int.tryParse(value) ?? 0,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: 'Enter n'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  grid = List.generate(m, (i) => List.filled(n, ''));
+                });
+              },
+              child: Text('Create Grid'),
             ),
+            if (grid.isNotEmpty)
+              Column(
+                children: [
+                  Text('Enter Characters for Grid:'),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: m * n,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: n,
+                    ),
+                    itemBuilder: (context, index) {
+                      return TextField(
+                        onChanged: (value) {
+                          final row = index ~/ n;
+                          final col = index % n;
+                          setState(() {
+                            grid[row][col] = value.length > 0 ? value[0] : '';
+                          });
+                        },
+                        maxLength: 1,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Cell ${index + 1}',
+                        ),
+                      );
+                    },
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SearchScreen(grid),
+                        ),
+                      );
+                    },
+                    child: Text('Display Grid'),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+}
+
+class SearchScreen extends StatefulWidget {
+  final List<List<String>> grid;
+
+  SearchScreen(this.grid);
+
+  @override
+  _SearchScreenState createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  String searchText = '';
+  List<List<bool>> highlightedGrid = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Search Screen'),
+      ),
+      body: Column(
+        children: [
+          TextField(
+            onChanged: (value) {
+              setState(() {
+                searchText = value;
+                highlightGrid();
+              });
+            },
+            decoration: InputDecoration(
+              labelText: 'Enter Text to Search',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          Expanded(
+            child: GridView.builder(
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: widget.grid.length * widget.grid[0].length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: widget.grid[0].length,
+              ),
+              itemBuilder: (context, index) {
+                final row = index ~/ widget.grid[0].length;
+                final col = index % widget.grid[0].length;
+                return Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(),
+                    color: highlightedGrid[row][col] ? Colors.yellow : null,
+                  ),
+                  child: Center(
+                    child: Text(widget.grid[row][col]),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void highlightGrid() {
+    setState(() {
+      highlightedGrid = List.generate(
+        widget.grid.length,
+        (i) => List.generate(widget.grid[i].length, (j) => false),
+      );
+
+      for (int i = 0; i < widget.grid.length; i++) {
+        for (int j = 0; j < widget.grid[i].length; j++) {
+          if (checkForWord(i, j)) {
+            highlightWord(i, j);
+          }
+        }
+      }
+    });
+  }
+
+  bool checkForWord(int row, int col) {
+    if (widget.grid[row][col] != searchText[0]) {
+      return false;
+    }
+
+    bool found = false;
+
+    // Check East
+    if (col + searchText.length <= widget.grid[0].length) {
+      found = true;
+      for (int i = 0; i < searchText.length; i++) {
+        if (widget.grid[row][col + i] != searchText[i]) {
+          found = false;
+          break;
+        }
+      }
+    }
+
+    // Check South
+    if (!found && row + searchText.length <= widget.grid.length) {
+      found = true;
+      for (int i = 0; i < searchText.length; i++) {
+        if (widget.grid[row + i][col] != searchText[i]) {
+          found = false;
+          break;
+        }
+      }
+    }
+
+    // Check Southeast
+    if (!found &&
+        row + searchText.length <= widget.grid.length &&
+        col + searchText.length <= widget.grid[0].length) {
+      found = true;
+      for (int i = 0; i < searchText.length; i++) {
+        if (widget.grid[row + i][col + i] != searchText[i]) {
+          found = false;
+          break;
+        }
+      }
+    }
+
+    return found;
+  }
+
+  void highlightWord(int row, int col) {
+    // Check East
+    if (col + searchText.length <= widget.grid[0].length) {
+      for (int i = 0; i < searchText.length; i++) {
+        highlightedGrid[row][col + i] = true;
+      }
+    }
+
+    // Check South
+    if (row + searchText.length <= widget.grid.length) {
+      for (int i = 0; i < searchText.length; i++) {
+        highlightedGrid[row + i][col] = true;
+      }
+    }
+
+    // Check Southeast
+    if (row + searchText.length <= widget.grid.length &&
+        col + searchText.length <= widget.grid[0].length) {
+      for (int i = 0; i < searchText.length; i++) {
+        highlightedGrid[row + i][col + i] = true;
+      }
+    }
   }
 }
